@@ -1,0 +1,8 @@
+*__pycache__/
+*.pyc
+*.pyo
+sample_doc.txt
+chroma_data/
+.env
+venv/
+.DS_Store
