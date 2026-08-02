@@ -1,0 +1,51 @@
+
+    Python is a high-level, interpreted programming language.
+    It's known for its simplicity and readability.
+    Python is used in data science, web development, and AI.
+    
+    Machine Learning is a subset of artificial intelligence.
+    It allows computers to learn from data without being explicitly programmed.
+    
+    FastAPI is a modern Python web framework for building APIs.
+    It's fast, easy to use, and great for microservices.
+    
+    Python is a high-level, interpreted programming language.
+    It's known for its simplicity and readability.
+    Python is used in data science, web development, and AI.
+    
+    Machine Learning is a subset of artificial intelligence.
+    It allows computers to learn from data without being explicitly programmed.
+    
+    FastAPI is a modern Python web framework for building APIs.
+    It's fast, easy to use, and great for microservices.
+    
+    Python is a high-level, interpreted programming language.
+    It's known for its simplicity and readability.
+    Python is used in data science, web development, and AI.
+    
+    Machine Learning is a subset of artificial intelligence.
+    It allows computers to learn from data without being explicitly programmed.
+    
+    FastAPI is a modern Python web framework for building APIs.
+    It's fast, easy to use, and great for microservices.
+    
+    Python is a high-level, interpreted programming language.
+    It's known for its simplicity and readability.
+    Python is used in data science, web development, and AI.
+    
+    Machine Learning is a subset of artificial intelligence.
+    It allows computers to learn from data without being explicitly programmed.
+    
+    FastAPI is a modern Python web framework for building APIs.
+    It's fast, easy to use, and great for microservices.
+    
+    Python is a high-level, interpreted programming language.
+    It's known for its simplicity and readability.
+    Python is used in data science, web development, and AI.
+    
+    Machine Learning is a subset of artificial intelligence.
+    It allows computers to learn from data without being explicitly programmed.
+    
+    FastAPI is a modern Python web framework for building APIs.
+    It's fast, easy to use, and great for microservices.
+    
