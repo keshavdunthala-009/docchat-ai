@@ -24,7 +24,7 @@ export function Chat({ activeDoc, onQuestion }) {
     setLoading(true);
     onQuestion();
     try {
-      const API_URL = 'https://docchat-rag-llm-production.up.railway.app';
+      const API_URL = import.meta.env.VITE_API_URL || 'https://docchat-rag-llm-production.up.railway.app';
       const res = await axios.post(`${API_URL}/ask`, { question: q }); 
       setMessages(prev => [...prev, { type:'ai', text:res.data.answer, source:activeDoc.name }]);
     } catch (err) {
