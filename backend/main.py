@@ -17,7 +17,7 @@ app.add_middleware(
         "http://localhost:3000",
         "http://localhost:5173",
         "http://localhost:5174",
-        "https://https://vercel.com/docchat-ai/docchat-ai",  # Add your Vercel URL
+        "https://docchat-ai-delta.vercel.app",  # Add your Vercel URL
     ],
     allow_credentials=True,
     allow_methods=["*"],

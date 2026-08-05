@@ -13,7 +13,8 @@ export function Sidebar({ docs, activeDoc, questionCount, onUpload, onSelect }) 
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const res = await axios.post('http://localhost:8000/upload', formData);
+      const API_URL = 'https://docchat-ai-production-up.up.railway.app';
+      const res = await axios.post(`${API_URL}/upload`, formData);
       onUpload({ name: res.data.filename });
       setMsg('Uploaded!');
       setFile(null);
