@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class RAGPipeline:
-    """100% Accurate RAG - Only Top 1 Chunk"""
+    """RAG Pipeline - Top 3 Chunks for Better Accuracy"""
     
     def __init__(self):
         self.doc_processor = DocumentProcessor()
@@ -18,46 +18,42 @@ class RAGPipeline:
         """Add document"""
         return self.doc_processor.store_document(pdf_path, document_name)
     
-    def query(self, question: str, top_k: int = 1) -> dict:
-        """
-        100% Accurate RAG:
-        - Retrieve only TOP 1 most relevant chunk
-        - Generate answer from that 1 chunk
-        - Force 100% accuracy
-        """
+    def query(self, question: str, top_k: int = 3) -> dict:
+        """RAG Pipeline - retrieve TOP 3 chunks for better accuracy"""
+        
         print(f"\n{'='*60}")
-        print(f"❓ Question: {question}")
+        print(f"Question: {question}")
         print(f"{'='*60}\n")
         
-        # Retrieve ONLY 1 chunk
-        print(f"1️⃣ Retrieving TOP 1 most relevant chunk...")
-        search_results = self.doc_processor.search_documents(question, top_k=1)
+        # Retrieve TOP 3 chunks
+        print(f"Retrieving TOP 3 relevant chunks...")
+        search_results = self.doc_processor.search_documents(question, top_k=3)
         
         if not search_results:
             return {
                 "question": question,
-                "answer": "❌ Not found in document",
+                "answer": "Not found in document",
                 "sources": [],
                 "chunk_count": 0
             }
         
-        print(f"   ✅ Found 1 chunk\n")
+        print(f"Found {len(search_results)} chunks\n")
         
-        # Show retrieved chunk
-        chunk_text = search_results[0]["text"]
-        print(f"📌 RETRIEVED CHUNK:")
-        print(f"{chunk_text}\n")
+        # Combine ALL chunks as context
+        context = "\n\n---\n\n".join([r["text"] for r in search_results])
+        
+        print(f"RETRIEVED CONTEXT:")
+        print(f"{context}\n")
         print(f"{'='*60}\n")
         
-        # Generate answer from ONLY this chunk
-        print(f"2️⃣ Generating answer from this chunk...")
-        answer = self.answer_gen.generate(question, chunk_text)
-        print(f"   ✅ Answer: {answer}\n")
-        print(f"{'='*60}\n")
+        # Generate answer from combined context
+        print(f"Generating answer...")
+        answer = self.answer_gen.generate(question, context)
+        print(f"Answer: {answer}\n")
         
         return {
             "question": question,
             "answer": answer,
-            "sources": [chunk_text[:150] + "..."],
-            "chunk_count": 1
+            "sources": [r["text"][:150] + "..." for r in search_results],
+            "chunk_count": len(search_results)
         }
