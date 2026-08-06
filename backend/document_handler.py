@@ -2,28 +2,19 @@ import os
 from typing import List, Dict
 from sentence_transformers import SentenceTransformer
 import chromadb
-from chromadb.config import Settings
+
 
 class DocumentProcessor:
-    """Process and store documents in vector database"""
-    
-   def __init__(self):
-    self.model = SentenceTransformer('all-MiniLM-L6-v2')
-    self.client = chromadb.PersistentClient(path="/tmp/chroma_data")
-    self.collection = self.client.get_or_create_collection(
-        name="documents",
-        metadata={"hnsw:space": "cosine"}
-    )
-    
-    # Use /tmp for Railway (writable directory)
-    self.client = chromadb.PersistentClient(path="/tmp/chroma_data")
-    self.collection = self.client.get_or_create_collection(
-        name="documents",
-        metadata={"hnsw:space": "cosine"}
-    )
-    
+
+    def __init__(self):
+        self.model = SentenceTransformer('all-MiniLM-L6-v2')
+        self.client = chromadb.PersistentClient(path="/tmp/chroma_data")
+        self.collection = self.client.get_or_create_collection(
+            name="documents",
+            metadata={"hnsw:space": "cosine"}
+        )
+
     def extract_text_from_pdf(self, pdf_path: str) -> str:
-        """Extract text from PDF file"""
         try:
             import PyPDF2
             text = ""
@@ -33,17 +24,14 @@ class DocumentProcessor:
                     text += page.extract_text() + "\n"
             return text
         except Exception as e:
-            # Try reading as text file
             with open(pdf_path, 'r', encoding='utf-8', errors='ignore') as f:
                 return f.read()
-    
+
     def chunk_text(self, text: str, chunk_size: int = 200, overlap: int = 40) -> List[Dict]:
-        """Split text into chunks"""
         chunks = []
         sentences = text.split('.')
         current_chunk = ""
         chunk_id = 0
-        
         for sentence in sentences:
             sentence = sentence.strip() + "."
             if len(current_chunk) + len(sentence) < chunk_size:
@@ -57,69 +45,44 @@ class DocumentProcessor:
                     })
                     chunk_id += 1
                 current_chunk = sentence
-        
         if len(current_chunk) > 50:
             chunks.append({
                 "id": f"chunk_{chunk_id}",
                 "text": current_chunk.strip(),
                 "chunk_index": chunk_id
             })
-        
         return chunks
-    
+
     def store_document(self, pdf_path: str, document_name: str) -> dict:
-        """Store document with BATCH embedding for speed"""
-        
-        print(f"\n{'='*60}")
         print(f"Processing: {document_name}")
-        print(f"{'='*60}\n")
-        
-        # Step 1: Extract text
-        print("1. Extracting text from PDF...")
         text = self.extract_text_from_pdf(pdf_path)
-        print(f"✅ Extracted {len(text)} characters\n")
-        
-        # Step 2: Chunk text
-        print("2. Chunking text...")
+        print(f"Extracted {len(text)} characters")
         chunks = self.chunk_text(text)
-        print(f"✅ Created {len(chunks)} chunks\n")
-        
-        # Step 3: BATCH embed ALL chunks at once
-        print("3. Embedding ALL chunks at once (batch)...")
+        print(f"Created {len(chunks)} chunks")
         chunk_texts = [chunk["text"] for chunk in chunks]
-        
         embeddings = self.model.encode(
             chunk_texts,
             batch_size=32,
-            show_progress_bar=True,
             convert_to_numpy=True
         )
-        print(f"✅ Embedded {len(embeddings)} chunks\n")
-        
-        # Step 4: Store ALL in ChromaDB at once
-        print("4. Storing in vector database...")
+        print(f"Embedded {len(embeddings)} chunks")
         ids = [f"{document_name}_chunk_{i}" for i in range(len(chunks))]
         metadatas = [{"document": document_name, "chunk_index": i} for i in range(len(chunks))]
-        
         self.collection.add(
             ids=ids,
             embeddings=embeddings.tolist(),
             documents=chunk_texts,
             metadatas=metadatas
         )
-        print(f"✅ Stored all {len(chunks)} chunks at once!\n")
-        
+        print(f"Stored all {len(chunks)} chunks!")
         return {"chunks": len(chunks), "document": document_name}
-    
+
     def search_documents(self, query: str, top_k: int = 1) -> List[Dict]:
-        """Search for relevant chunks"""
         query_embedding = self.model.encode(query)
-        
         results = self.collection.query(
             query_embeddings=[query_embedding.tolist()],
             n_results=top_k
         )
-        
         search_results = []
         for i, doc in enumerate(results['documents'][0]):
             search_results.append({
@@ -127,5 +90,4 @@ class DocumentProcessor:
                 "metadata": results['metadatas'][0][i],
                 "rank": i + 1
             })
-        
         return search_results
