@@ -1,4 +1,5 @@
 import os
+import re
 from typing import List, Dict
 from sentence_transformers import SentenceTransformer
 import chromadb
@@ -29,23 +30,50 @@ class DocumentProcessor:
 
     def chunk_text(self, text: str, chunk_size: int = 500, overlap: int = 100) -> List[Dict]:
         chunks = []
-        start = 0
         chunk_id = 0
-        
-        while start < len(text):
-            end = start + chunk_size
-            chunk = text[start:end].strip()
-            
-            if len(chunk) > 50:
-                chunks.append({
-                    "id": f"chunk_{chunk_id}",
-                    "text": chunk,
-                    "chunk_index": chunk_id
-                })
-                chunk_id += 1
-            
-            start = end - overlap
-        
+
+        # Split by resume sections
+        sections = re.split(r'\n(?=[A-Z][A-Z\s]+\n)', text)
+
+        for section in sections:
+            section = section.strip()
+            if len(section) > 50:
+                if len(section) > chunk_size:
+                    start = 0
+                    while start < len(section):
+                        end = start + chunk_size
+                        chunk = section[start:end].strip()
+                        if len(chunk) > 50:
+                            chunks.append({
+                                "id": f"chunk_{chunk_id}",
+                                "text": chunk,
+                                "chunk_index": chunk_id
+                            })
+                            chunk_id += 1
+                        start = end - overlap
+                else:
+                    chunks.append({
+                        "id": f"chunk_{chunk_id}",
+                        "text": section,
+                        "chunk_index": chunk_id
+                    })
+                    chunk_id += 1
+
+        # Fallback if no sections found
+        if len(chunks) == 0:
+            start = 0
+            while start < len(text):
+                end = start + chunk_size
+                chunk = text[start:end].strip()
+                if len(chunk) > 50:
+                    chunks.append({
+                        "id": f"chunk_{chunk_id}",
+                        "text": chunk,
+                        "chunk_index": chunk_id
+                    })
+                    chunk_id += 1
+                start = end - overlap
+
         return chunks
 
     def store_document(self, pdf_path: str, document_name: str) -> dict:
@@ -55,17 +83,17 @@ class DocumentProcessor:
         chunks = self.chunk_text(text)
         print(f"Created {len(chunks)} chunks")
         chunk_texts = [chunk["text"] for chunk in chunks]
-        
+
         embeddings = self.model.encode(
             chunk_texts,
             batch_size=32,
             convert_to_numpy=True
         )
         print(f"Embedded {len(embeddings)} chunks")
-        
+
         ids = [f"{document_name}_chunk_{i}" for i in range(len(chunks))]
         metadatas = [{"document": document_name, "chunk_index": i} for i in range(len(chunks))]
-        
+
         self.collection.add(
             ids=ids,
             embeddings=embeddings.tolist(),
