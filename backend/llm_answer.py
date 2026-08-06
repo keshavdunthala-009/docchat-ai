@@ -13,21 +13,25 @@ class AnswerGenerator:
         self.model = "llama-3.3-70b-versatile"
         
         if not self.api_key:
-            raise ValueError("GROQ_API_KEY not found in .env file!")
+            raise ValueError("GROQ_API_KEY not found!")
     
     def generate(self, question: str, context: str) -> str:
-        """Generate exact answer from document"""
+        """Generate accurate answer from document"""
         
-        prompt = f"""Read the text below and answer the question accurately.
+        prompt = f"""You are a document analysis expert. Read the document text carefully and answer the question accurately.
 
-TEXT:
+DOCUMENT TEXT:
 {context}
 
 QUESTION: {question}
 
-- Answer using ONLY information from the text above
-- Be specific and concise
-- If not in text, say "Not found in document"
+INSTRUCTIONS:
+- Read ALL the text carefully
+- Answer ONLY based on information in the document
+- List ALL relevant items found
+- Be specific with names, dates, and details
+- If listing projects/skills/experience, include ALL of them
+- Keep answer clear and concise
 
 ANSWER:"""
         
@@ -46,7 +50,7 @@ ANSWER:"""
                     }
                 ],
                 "temperature": 0.1,
-                "max_tokens": 150
+                "max_tokens": 300
             }
             
             response = requests.post(
