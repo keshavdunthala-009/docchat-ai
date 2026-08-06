@@ -17,7 +17,6 @@ class AnswerGenerator:
             raise ValueError("GROQ_API_KEY not found!")
 
     def generate(self, question: str, context: str) -> str:
-        """Generate accurate answer from document"""
 
         prompt = f"""You are analyzing a resume/document. Answer ONLY based on the document text below.
 
@@ -28,7 +27,7 @@ QUESTION: {question}
 
 STRICT RULES:
 - Answer ONLY what is explicitly written in the document
-- For projects question: List ONLY items under "PROJECTS" heading
+- For projects question: List ONLY items under PROJECTS heading
 - Do NOT include internship duties, volunteering, or certifications as projects
 - Include project names, dates, and key achievements
 - Be specific with names, dates, numbers
@@ -62,10 +61,10 @@ ANSWER:"""
             )
 
             if response.status_code != 200:
-                return f"❌ ERROR: {response.text}"
+                return f"ERROR: {response.text}"
 
             answer = response.json()["choices"][0]["message"]["content"]
             return answer.strip()
 
         except Exception as e:
-            return f"❌ ERROR: {str(e)}"
+            return f"ERROR: {str(e)}"

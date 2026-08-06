@@ -7,11 +7,11 @@ import chromadb
 
 class DocumentProcessor:
 
-    def __init__(self):
+    def __init__(self, session_id: str = "default"):
         self.model = SentenceTransformer('all-MiniLM-L6-v2')
         self.client = chromadb.PersistentClient(path="/tmp/chroma_data")
         self.collection = self.client.get_or_create_collection(
-            name="documents",
+            name=f"documents_{session_id}",
             metadata={"hnsw:space": "cosine"}
         )
 
@@ -32,7 +32,6 @@ class DocumentProcessor:
         chunks = []
         chunk_id = 0
 
-        # Split by resume sections
         sections = re.split(r'\n(?=[A-Z][A-Z\s]+\n)', text)
 
         for section in sections:
@@ -59,7 +58,6 @@ class DocumentProcessor:
                     })
                     chunk_id += 1
 
-        # Fallback if no sections found
         if len(chunks) == 0:
             start = 0
             while start < len(text):

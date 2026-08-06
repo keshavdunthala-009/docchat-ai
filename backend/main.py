@@ -4,14 +4,13 @@ from pydantic import BaseModel
 from typing import List
 from rag_pipeline import RAGPipeline
 import os
+import uuid
 from dotenv import load_dotenv
 
 load_dotenv()
 
-app = FastAPI(title="RAG System", version="2.0")
+app = FastAPI(title="RAG System", version="3.0")
 
-# CORS for React
-# CORS for React
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,12 +19,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-rag = RAGPipeline()
+# Store RAG pipeline per session
+rag_sessions = {}
 
+def get_rag(session_id: str) -> RAGPipeline:
+    if session_id not in rag_sessions:
+        rag_sessions[session_id] = RAGPipeline(session_id=session_id)
+    return rag_sessions[session_id]
 
 class QuestionRequest(BaseModel):
     question: str
-
+    session_id: str = "default"
 
 class QuestionResponse(BaseModel):
     question: str
@@ -33,36 +37,33 @@ class QuestionResponse(BaseModel):
     sources: List[str] = []
     chunk_count: int
 
-
 @app.get("/")
 def read_root():
     return {"message": "RAG system is running"}
-
 
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
 
+@app.get("/session")
+def create_session():
+    session_id = str(uuid.uuid4())
+    return {"session_id": session_id}
 
 @app.post("/upload")
-async def upload_document(file: UploadFile = File(...)):
-    """Upload and process a document"""
+async def upload_document(
+    file: UploadFile = File(...),
+    session_id: str = "default"
+):
     try:
-        temp_path = f"temp_{file.filename}"
-
+        temp_path = f"temp_{session_id}_{file.filename}"
         content = await file.read()
-        print(f"File read: {len(content)} bytes")
 
         with open(temp_path, "wb") as f:
             f.write(content)
-        print(f"File saved: {temp_path}")
 
-        try:
-            result = rag.add_document(temp_path, file.filename)
-            print(f"Document processed: {result}")
-        except Exception as e:
-            print(f"Processing error: {e}")
-            result = {"chunks": 0}
+        rag = get_rag(session_id)
+        result = rag.add_document(temp_path, file.filename)
 
         if os.path.exists(temp_path):
             os.remove(temp_path)
@@ -70,7 +71,8 @@ async def upload_document(file: UploadFile = File(...)):
         return {
             "status": "success",
             "filename": file.filename,
-            "chunks": result.get("chunks", 0)
+            "chunks": result.get("chunks", 0),
+            "session_id": session_id
         }
 
     except Exception as e:
@@ -79,12 +81,11 @@ async def upload_document(file: UploadFile = File(...)):
         traceback.print_exc()
         raise HTTPException(status_code=400, detail=str(e))
 
-
 @app.post("/ask")
 async def ask_question(request: QuestionRequest) -> QuestionResponse:
-    """Ask a question - retrieve TOP 1 chunk only"""
     try:
-        result = rag.query(request.question, top_k=1)
+        rag = get_rag(request.session_id)
+        result = rag.query(request.question)
 
         return QuestionResponse(
             question=result.get("question", request.question),
@@ -96,7 +97,6 @@ async def ask_question(request: QuestionRequest) -> QuestionResponse:
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=400, detail=str(e))
-
 
 if __name__ == "__main__":
     import uvicorn
