@@ -11,15 +11,11 @@ load_dotenv()
 app = FastAPI(title="RAG System", version="2.0")
 
 # CORS for React
+# CORS for React
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "https://docchat-ai-delta.vercel.app",  # Add your Vercel URL
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
