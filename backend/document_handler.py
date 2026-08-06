@@ -27,30 +27,25 @@ class DocumentProcessor:
             with open(pdf_path, 'r', encoding='utf-8', errors='ignore') as f:
                 return f.read()
 
-    def chunk_text(self, text: str, chunk_size: int = 200, overlap: int = 40) -> List[Dict]:
+    def chunk_text(self, text: str, chunk_size: int = 500, overlap: int = 100) -> List[Dict]:
         chunks = []
-        sentences = text.split('.')
-        current_chunk = ""
+        start = 0
         chunk_id = 0
-        for sentence in sentences:
-            sentence = sentence.strip() + "."
-            if len(current_chunk) + len(sentence) < chunk_size:
-                current_chunk += " " + sentence
-            else:
-                if len(current_chunk) > 50:
-                    chunks.append({
-                        "id": f"chunk_{chunk_id}",
-                        "text": current_chunk.strip(),
-                        "chunk_index": chunk_id
-                    })
-                    chunk_id += 1
-                current_chunk = sentence
-        if len(current_chunk) > 50:
-            chunks.append({
-                "id": f"chunk_{chunk_id}",
-                "text": current_chunk.strip(),
-                "chunk_index": chunk_id
-            })
+        
+        while start < len(text):
+            end = start + chunk_size
+            chunk = text[start:end].strip()
+            
+            if len(chunk) > 50:
+                chunks.append({
+                    "id": f"chunk_{chunk_id}",
+                    "text": chunk,
+                    "chunk_index": chunk_id
+                })
+                chunk_id += 1
+            
+            start = end - overlap
+        
         return chunks
 
     def store_document(self, pdf_path: str, document_name: str) -> dict:
@@ -60,14 +55,17 @@ class DocumentProcessor:
         chunks = self.chunk_text(text)
         print(f"Created {len(chunks)} chunks")
         chunk_texts = [chunk["text"] for chunk in chunks]
+        
         embeddings = self.model.encode(
             chunk_texts,
             batch_size=32,
             convert_to_numpy=True
         )
         print(f"Embedded {len(embeddings)} chunks")
+        
         ids = [f"{document_name}_chunk_{i}" for i in range(len(chunks))]
         metadatas = [{"document": document_name, "chunk_index": i} for i in range(len(chunks))]
+        
         self.collection.add(
             ids=ids,
             embeddings=embeddings.tolist(),
@@ -77,7 +75,7 @@ class DocumentProcessor:
         print(f"Stored all {len(chunks)} chunks!")
         return {"chunks": len(chunks), "document": document_name}
 
-    def search_documents(self, query: str, top_k: int = 1) -> List[Dict]:
+    def search_documents(self, query: str, top_k: int = 5) -> List[Dict]:
         query_embedding = self.model.encode(query)
         results = self.collection.query(
             query_embeddings=[query_embedding.tolist()],
