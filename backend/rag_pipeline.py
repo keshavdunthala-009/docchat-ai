@@ -53,7 +53,7 @@ class RAGPipeline:
                 print(f"Retrieved {len(search_results)} chunks")
         else:
             search_results = self.doc_processor.search_documents(
-                question, top_k=top_k
+                question, top_k=7
             )
             if not search_results:
                 return {

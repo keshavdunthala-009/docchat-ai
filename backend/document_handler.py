@@ -101,7 +101,7 @@ class DocumentProcessor:
         print(f"Stored all {len(chunks)} chunks!")
         return {"chunks": len(chunks), "document": document_name}
 
-    def search_documents(self, query: str, top_k: int = 5) -> List[Dict]:
+    def search_documents(self, query: str, top_k: int = 7) -> List[Dict]:
         query_embedding = self.model.encode(query)
         results = self.collection.query(
             query_embeddings=[query_embedding.tolist()],
