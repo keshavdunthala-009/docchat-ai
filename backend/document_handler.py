@@ -7,8 +7,13 @@ from chromadb.config import Settings
 class DocumentProcessor:
     """Process and store documents in vector database"""
     
-    def __init__(self):
+   def __init__(self):
     self.model = SentenceTransformer('all-MiniLM-L6-v2')
+    self.client = chromadb.PersistentClient(path="/tmp/chroma_data")
+    self.collection = self.client.get_or_create_collection(
+        name="documents",
+        metadata={"hnsw:space": "cosine"}
+    )
     
     # Use /tmp for Railway (writable directory)
     self.client = chromadb.PersistentClient(path="/tmp/chroma_data")
