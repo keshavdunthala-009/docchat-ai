@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from supabase import create_client  # ✅ Move here - at the very top
 
 load_dotenv()
 
@@ -16,7 +17,6 @@ class SupabaseHandler:
     def _connect(self):
         """Connect to Supabase"""
         try:
-            from supabase_handler import create_client
             if self.url and self.key:
                 self.client = create_client(self.url, self.key)
                 print("✅ Supabase connected!")
@@ -32,12 +32,10 @@ class SupabaseHandler:
                 print("Supabase not connected!")
                 return False
 
-            # Delete old document for this session
             self.client.table("documents").delete().eq(
                 "session_id", session_id
             ).execute()
 
-            # Insert new document
             self.client.table("documents").insert({
                 "session_id": session_id,
                 "document_name": document_name,
