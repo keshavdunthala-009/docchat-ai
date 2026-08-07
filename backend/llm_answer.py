@@ -18,7 +18,7 @@ class AnswerGenerator:
 
     def generate(self, question: str, context: str) -> str:
 
-        prompt = f"""You are analyzing a resume/document. Answer ONLY based on the document text below.
+        prompt = f"""You are analyzing a document. Answer ONLY based on the document text below.
 
 DOCUMENT TEXT:
 {context}
@@ -27,9 +27,11 @@ QUESTION: {question}
 
 STRICT RULES:
 - Answer ONLY what is explicitly written in the document
-- For projects question: List ONLY items under PROJECTS heading
-- Do NOT include internship duties, volunteering, or certifications as projects
-- Include project names, dates, and key achievements
+- For NAME: Look at the very beginning of the document
+- For PROJECTS: List ONLY items under PROJECTS heading
+- For SKILLS: List ALL skills mentioned including soft skills
+- For EXPERIENCE: List work experience details
+- For EDUCATION: List education details
 - Be specific with names, dates, numbers
 - If not found say "Not mentioned in document"
 

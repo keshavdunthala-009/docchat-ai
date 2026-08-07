@@ -2,7 +2,6 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List
-from rag_pipeline import RAGPipeline
 import os
 import uuid
 from dotenv import load_dotenv
@@ -19,7 +18,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Store RAG pipeline per session
+# Import after app creation
+from rag_pipeline import RAGPipeline, document_store
+
 rag_sessions = {}
 
 def get_rag(session_id: str) -> RAGPipeline:
@@ -43,7 +44,7 @@ def read_root():
 
 @app.get("/health")
 def health_check():
-    return {"status": "ok"}
+    return {"status": "ok", "sessions": list(document_store.keys())}
 
 @app.get("/session")
 def create_session():
@@ -56,6 +57,8 @@ async def upload_document(
     session_id: str = "default"
 ):
     try:
+        print(f"UPLOAD - Session: {session_id}, File: {file.filename}")
+
         temp_path = f"temp_{session_id}_{file.filename}"
         content = await file.read()
 
@@ -67,6 +70,9 @@ async def upload_document(
 
         if os.path.exists(temp_path):
             os.remove(temp_path)
+
+        print(f"UPLOAD SUCCESS - Session: {session_id}")
+        print(f"Document store keys: {list(document_store.keys())}")
 
         return {
             "status": "success",
@@ -84,6 +90,9 @@ async def upload_document(
 @app.post("/ask")
 async def ask_question(request: QuestionRequest) -> QuestionResponse:
     try:
+        print(f"ASK - Session: {request.session_id}")
+        print(f"Document store keys: {list(document_store.keys())}")
+
         rag = get_rag(request.session_id)
         result = rag.query(request.question)
 
