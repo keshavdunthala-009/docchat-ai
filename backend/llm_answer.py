@@ -6,7 +6,6 @@ load_dotenv()
 
 
 class AnswerGenerator:
-    """Generate accurate answers using Groq API"""
 
     def __init__(self):
         self.api_key = os.getenv("GROQ_API_KEY")
@@ -29,9 +28,10 @@ STRICT RULES:
 - Answer ONLY what is explicitly written in the document
 - For NAME: Look at the very beginning of the document
 - For PROJECTS: List ONLY items under PROJECTS heading
-- For SKILLS: List ALL skills mentioned including soft skills
+- For SKILLS: List ALL skills including soft and technical skills
 - For EXPERIENCE: List work experience details
 - For EDUCATION: List education details
+- For CERTIFICATIONS: List all certifications
 - Be specific with names, dates, numbers
 - If not found say "Not mentioned in document"
 
