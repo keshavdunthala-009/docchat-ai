@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = FastAPI(title="RAG System", version="3.0")
+app = FastAPI(title="RAG System", version="4.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -18,8 +18,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Import after app creation
-from rag_pipeline import RAGPipeline, document_store
+from rag_pipeline import RAGPipeline
 
 rag_sessions = {}
 
@@ -44,7 +43,7 @@ def read_root():
 
 @app.get("/health")
 def health_check():
-    return {"status": "ok", "sessions": list(document_store.keys())}
+    return {"status": "ok"}
 
 @app.get("/session")
 def create_session():
@@ -72,7 +71,6 @@ async def upload_document(
             os.remove(temp_path)
 
         print(f"UPLOAD SUCCESS - Session: {session_id}")
-        print(f"Document store keys: {list(document_store.keys())}")
 
         return {
             "status": "success",
@@ -91,7 +89,6 @@ async def upload_document(
 async def ask_question(request: QuestionRequest) -> QuestionResponse:
     try:
         print(f"ASK - Session: {request.session_id}")
-        print(f"Document store keys: {list(document_store.keys())}")
 
         rag = get_rag(request.session_id)
         result = rag.query(request.question)
