@@ -11,7 +11,7 @@ class SupabaseHandler:
 
     def __init__(self):
         self.url = os.getenv("SUPABASE_URL")
-        self.key = os.getenv("SUPABASE_API_KEY")
+        self.key = os.getenv("SUPABASE_SECRET_API_KEY")
         self.client = None
 
         self._connect()
