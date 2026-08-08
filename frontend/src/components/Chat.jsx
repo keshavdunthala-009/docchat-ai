@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 
-export function Chat({ activeDoc, onQuestion }) {
+const API_URL = import.meta.env.VITE_API_URL || 'https://docchat-rag-llm-production.up.railway.app';
+
+export function Chat({ activeDoc, sessionId, onQuestion }) {
   const [question, setQuestion] = useState('');
   const [messages, setMessages] = useState([
     { type:'ai', text:'Document ready. Ask anything and I will find the exact answer grounded 100% in your file.' }
@@ -24,9 +26,15 @@ export function Chat({ activeDoc, onQuestion }) {
     setLoading(true);
     onQuestion();
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'https://docchat-rag-llm-production.up.railway.app';
-      const res = await axios.post(`${API_URL}/ask`, { question: q }); 
-      setMessages(prev => [...prev, { type:'ai', text:res.data.answer, source:activeDoc.name }]);
+      const res = await axios.post(`${API_URL}/ask`, {
+        question: q,
+        session_id: "default"
+      });
+      setMessages(prev => [...prev, {
+        type:'ai',
+        text: res.data.answer,
+        source: activeDoc.name
+      }]);
     } catch (err) {
       setMessages(prev => [...prev, { type:'error', text:'Error: ' + err.message }]);
     } finally {
@@ -37,7 +45,6 @@ export function Chat({ activeDoc, onQuestion }) {
   return (
     <div style={{display:'flex', flexDirection:'column', height:'100vh', background:'#0d0d0d'}}>
 
-      {/* Topbar */}
       <div style={{padding:'12px 18px', borderBottom:'1px solid #1a1a1a', display:'flex', alignItems:'center', justifyContent:'space-between'}}>
         <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
           <span style={{width:'8px', height:'8px', borderRadius:'50%', background:'#22c55e', display:'inline-block', flexShrink:0}}></span>
@@ -53,8 +60,7 @@ export function Chat({ activeDoc, onQuestion }) {
         </span>
       </div>
 
-      {/* Chat Area */}
-      <div ref={chatRef} style={{flex:1, overflowY:'auto', padding:'16px', display:'flex', flexDirection:'column', gap:'14px', scrollbarWidth:'thin', scrollbarColor:'#222 transparent'}}>
+      <div ref={chatRef} style={{flex:1, overflowY:'auto', padding:'16px', display:'flex', flexDirection:'column', gap:'14px'}}>
 
         {!activeDoc && (
           <div style={{flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', color:'#555', gap:'10px', marginTop:'100px'}}>
@@ -66,14 +72,11 @@ export function Chat({ activeDoc, onQuestion }) {
 
         {messages.map((msg, i) => (
           <div key={i} style={{display:'flex', gap:'10px', flexDirection: msg.type === 'user' ? 'row-reverse' : 'row', alignItems:'flex-start'}}>
-            
-            {/* Avatar */}
             <div style={{width:'28px', height:'28px', borderRadius:'8px', background: msg.type === 'user' ? '#1e1e1e' : '#6c47ff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'13px', flexShrink:0, border: msg.type === 'user' ? '1px solid #2a2a2a' : 'none'}}>
               {msg.type === 'user' ? '👤' : '✨'}
             </div>
 
             <div style={{maxWidth:'75%'}}>
-              {/* Bubble */}
               <div style={{padding:'10px 14px', borderRadius:'12px', fontSize:'12px', lineHeight:'1.7',
                 background: msg.type === 'user' ? '#6c47ff' : '#161616',
                 color: msg.type === 'user' ? '#fff' : msg.type === 'error' ? '#f87171' : '#ccc',
@@ -83,8 +86,6 @@ export function Chat({ activeDoc, onQuestion }) {
               }}>
                 {msg.text}
               </div>
-
-              {/* Source chip */}
               {msg.source && (
                 <div style={{marginTop:'5px', display:'inline-flex', alignItems:'center', gap:'5px', fontSize:'10px', padding:'3px 8px', borderRadius:'99px', background:'#0d2818', color:'#4ade80', border:'1px solid #166534'}}>
                   ✅ Source: {msg.source}
@@ -94,7 +95,6 @@ export function Chat({ activeDoc, onQuestion }) {
           </div>
         ))}
 
-        {/* Typing indicator */}
         {loading && (
           <div style={{display:'flex', gap:'10px', alignItems:'flex-start'}}>
             <div style={{width:'28px', height:'28px', borderRadius:'8px', background:'#6c47ff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'13px', flexShrink:0}}>✨</div>
@@ -107,7 +107,6 @@ export function Chat({ activeDoc, onQuestion }) {
         )}
       </div>
 
-      {/* Input Area */}
       <div style={{padding:'14px 18px', borderTop:'1px solid #1a1a1a', background:'#111'}}>
         <form onSubmit={handleAsk}>
           <div style={{display:'flex', gap:'8px', alignItems:'center', background:'#161616', border:'1px solid #2a2a2a', borderRadius:'10px', padding:'6px 6px 6px 14px'}}>
@@ -119,11 +118,7 @@ export function Chat({ activeDoc, onQuestion }) {
               disabled={loading || !activeDoc}
               style={{flex:1, background:'transparent', border:'none', outline:'none', fontSize:'12px', color:'#ddd', fontFamily:'Segoe UI, sans-serif'}}
             />
-            <button 
-              type='submit' 
-              disabled={loading || !activeDoc || !question.trim()} 
-              style={{padding:'8px 16px', background: loading || !activeDoc ? '#2a2a2a' : '#6c47ff', color: loading || !activeDoc ? '#555' : '#fff', border:'none', borderRadius:'7px', fontSize:'12px', cursor: loading || !activeDoc ? 'not-allowed' : 'pointer', fontWeight:'500', fontFamily:'Segoe UI, sans-serif', flexShrink:0}}
-            >
+            <button type='submit' disabled={loading || !activeDoc || !question.trim()} style={{padding:'8px 16px', background: loading || !activeDoc ? '#2a2a2a' : '#6c47ff', color: loading || !activeDoc ? '#555' : '#fff', border:'none', borderRadius:'7px', fontSize:'12px', cursor: loading || !activeDoc ? 'not-allowed' : 'pointer', fontWeight:'500', fontFamily:'Segoe UI, sans-serif', flexShrink:0}}>
               {loading ? '...' : 'Send ➤'}
             </button>
           </div>
