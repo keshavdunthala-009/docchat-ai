@@ -3,7 +3,7 @@ import { Sidebar } from './components/Sidebar';
 import { Chat } from './components/Chat';
 import axios from 'axios';
 
-const API_URL = 'https://docchat-rag-llm-production.up.railway.app';
+const API_URL = import.meta.env.VITE_API_URL || 'https://docchat-rag-llm-production.up.railway.app';
 
 function App() {
   const [activeDoc, setActiveDoc] = useState(null);
@@ -12,16 +12,32 @@ function App() {
   const [sessionId, setSessionId] = useState(null);
 
   useEffect(() => {
-    const createSession = async () => {
-      try {
-        const res = await axios.get(`${API_URL}/session`);
-        setSessionId(res.data.session_id);
-        console.log("Session created:", res.data.session_id);
-      } catch (err) {
-        setSessionId(Math.random().toString(36).substring(7));
+    const initSession = async () => {
+      // Check if session exists in sessionStorage
+      let existingSession = sessionStorage.getItem('docchat_session');
+      
+      if (existingSession) {
+        // Reuse existing session
+        console.log("Reusing session:", existingSession);
+        setSessionId(existingSession);
+      } else {
+        // Create new session
+        try {
+          const res = await axios.get(`${API_URL}/session`);
+          const newSessionId = res.data.session_id;
+          sessionStorage.setItem('docchat_session', newSessionId);
+          setSessionId(newSessionId);
+          console.log("New session created:", newSessionId);
+        } catch (err) {
+          // Fallback
+          const fallbackId = Math.random().toString(36).substring(7);
+          sessionStorage.setItem('docchat_session', fallbackId);
+          setSessionId(fallbackId);
+        }
       }
     };
-    createSession();
+    
+    initSession();
   }, []);
 
   return (

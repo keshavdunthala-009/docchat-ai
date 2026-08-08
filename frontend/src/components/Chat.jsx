@@ -19,16 +19,17 @@ export function Chat({ activeDoc, sessionId, onQuestion }) {
 
   const handleAsk = async (e) => {
     e.preventDefault();
-    if (!question.trim() || !activeDoc) return;
+    if (!question.trim() || !activeDoc || !sessionId) return;
     const q = question;
     setMessages(prev => [...prev, { type:'user', text:q }]);
     setQuestion('');
     setLoading(true);
     onQuestion();
     try {
+      // Use unique session_id per user!
       const res = await axios.post(`${API_URL}/ask`, {
         question: q,
-        session_id: "default"
+        session_id: sessionId
       });
       setMessages(prev => [...prev, {
         type:'ai',
@@ -66,7 +67,9 @@ export function Chat({ activeDoc, sessionId, onQuestion }) {
           <div style={{flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', color:'#555', gap:'10px', marginTop:'100px'}}>
             <div style={{fontSize:'40px'}}>🧠</div>
             <div style={{fontSize:'14px', fontWeight:'500', color:'#888'}}>DocChat AI</div>
-            <div style={{fontSize:'12px', textAlign:'center', maxWidth:'220px', lineHeight:'1.7', color:'#444'}}>Upload a document on the left to get started</div>
+            <div style={{fontSize:'12px', textAlign:'center', maxWidth:'220px', lineHeight:'1.7', color:'#444'}}>
+              Upload a document on the left to get started
+            </div>
           </div>
         )}
 
@@ -118,7 +121,22 @@ export function Chat({ activeDoc, sessionId, onQuestion }) {
               disabled={loading || !activeDoc}
               style={{flex:1, background:'transparent', border:'none', outline:'none', fontSize:'12px', color:'#ddd', fontFamily:'Segoe UI, sans-serif'}}
             />
-            <button type='submit' disabled={loading || !activeDoc || !question.trim()} style={{padding:'8px 16px', background: loading || !activeDoc ? '#2a2a2a' : '#6c47ff', color: loading || !activeDoc ? '#555' : '#fff', border:'none', borderRadius:'7px', fontSize:'12px', cursor: loading || !activeDoc ? 'not-allowed' : 'pointer', fontWeight:'500', fontFamily:'Segoe UI, sans-serif', flexShrink:0}}>
+            <button
+              type='submit'
+              disabled={loading || !activeDoc || !question.trim()}
+              style={{
+                padding:'8px 16px',
+                background: loading || !activeDoc ? '#2a2a2a' : '#6c47ff',
+                color: loading || !activeDoc ? '#555' : '#fff',
+                border:'none',
+                borderRadius:'7px',
+                fontSize:'12px',
+                cursor: loading || !activeDoc ? 'not-allowed' : 'pointer',
+                fontWeight:'500',
+                fontFamily:'Segoe UI, sans-serif',
+                flexShrink:0
+              }}
+            >
               {loading ? '...' : 'Send ➤'}
             </button>
           </div>

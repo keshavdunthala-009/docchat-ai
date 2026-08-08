@@ -12,7 +12,7 @@ class RAGPipeline:
     """Smart RAG Pipeline with Supabase persistence"""
 
     def __init__(self, session_id: str = "default"):
-        self.session_id = "default"
+        self.session_id = session_id  # Use actual session_id now!
         self.doc_processor = DocumentProcessor(session_id=session_id)
         self.model = SentenceTransformer('all-MiniLM-L6-v2')
         self.answer_gen = AnswerGenerator()

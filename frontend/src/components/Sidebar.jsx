@@ -10,13 +10,15 @@ export function Sidebar({ docs, activeDoc, questionCount, sessionId, onUpload, o
 
   const handleUpload = async (e) => {
     e.preventDefault();
-    if (!file) return;
+    if (!file || !sessionId) return;
     setLoading(true);
     try {
       const formData = new FormData();
       formData.append('file', file);
+      
+      // Use unique session_id per user!
       const res = await axios.post(
-        `${API_URL}/upload?session_id=default`,
+        `${API_URL}/upload?session_id=${sessionId}`,
         formData
       );
       onUpload({ name: res.data.filename });
@@ -56,7 +58,7 @@ export function Sidebar({ docs, activeDoc, questionCount, sessionId, onUpload, o
           />
           <button
             type='submit'
-            disabled={loading || !file}
+            disabled={loading || !file || !sessionId}
             style={{
               width:'100%',
               padding:'7px',
@@ -75,7 +77,7 @@ export function Sidebar({ docs, activeDoc, questionCount, sessionId, onUpload, o
         {msg && <p style={{fontSize:'11px', color:'#4ade80', marginTop:'6px'}}>{msg}</p>}
       </div>
 
-      {/* Documents List */}
+      {/* Documents */}
       {docs.length > 0 && (
         <>
           <div style={{fontSize:'10px', fontWeight:'600', color:'#444', letterSpacing:'0.8px', textTransform:'uppercase'}}>
