@@ -15,8 +15,6 @@ export function Sidebar({ docs, activeDoc, questionCount, sessionId, onUpload, o
     try {
       const formData = new FormData();
       formData.append('file', file);
-      
-      // Use unique session_id per user!
       const res = await axios.post(
         `${API_URL}/upload?session_id=${sessionId}`,
         formData
@@ -48,11 +46,16 @@ export function Sidebar({ docs, activeDoc, questionCount, sessionId, onUpload, o
       {/* Upload Zone */}
       <div style={{border:'1px dashed #2a2a2a', borderRadius:'10px', padding:'16px', textAlign:'center', background:'#161616'}}>
         <div style={{fontSize:'22px', color:'#444', marginBottom:'6px'}}>📤</div>
-        <div style={{fontSize:'11px', color:'#555', marginBottom:'10px', lineHeight:'1.5'}}>Drop your PDF here or click to browse</div>
+        <div style={{fontSize:'11px', color:'#555', marginBottom:'10px', lineHeight:'1.5'}}>
+          Drop PDF, Excel, Word, PPT or Image here
+        </div>
+        <div style={{fontSize:'10px', color:'#333', marginBottom:'8px'}}>
+          .pdf .xlsx .docx .pptx .csv .png .jpg
+        </div>
         <form onSubmit={handleUpload}>
           <input
             type='file'
-            accept='.pdf,.txt'
+            accept='.pdf,.txt,.xlsx,.xls,.csv,.docx,.pptx,.ppt,.png,.jpg,.jpeg,.tiff,.bmp'
             onChange={(e) => setFile(e.target.files[0])}
             style={{fontSize:'11px', marginBottom:'8px', width:'100%', color:'#888'}}
           />
