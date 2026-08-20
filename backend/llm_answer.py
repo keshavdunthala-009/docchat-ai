@@ -10,7 +10,7 @@ class AnswerGenerator:
     def __init__(self):
         self.api_key = os.getenv("GROQ_API_KEY")
         self.url = "https://api.groq.com/openai/v1/chat/completions"
-        self.model = "llama-3.1-8b-instant"
+        self.model = "qwen/qwen3.6-27b"
 
         if not self.api_key:
             raise ValueError("GROQ_API_KEY not found!")
