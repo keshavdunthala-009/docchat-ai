@@ -10,7 +10,7 @@ class AnswerGenerator:
     def __init__(self):
         self.api_key = os.getenv("GROQ_API_KEY")
         self.url = "https://api.groq.com/openai/v1/chat/completions"
-        self.model = "qwen/qwen3.6-27b"
+        self.model = "meta-llama/llama-4-scout-17b-16e-instruct"
 
         if not self.api_key:
             raise ValueError("GROQ_API_KEY not found!")
@@ -44,16 +44,17 @@ ANSWER:"""
             }
 
             data = {
-                "model": self.model,
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                "temperature": 0.1,
-                "max_tokens": 500
-            }
+    "model": self.model,
+    "messages": [
+        {
+            "role": "user",
+            "content": prompt
+        }
+    ],
+    "temperature": 0.1,
+    "max_tokens": 500,
+    "reasoning_effort": "none"  # ADD THIS
+}
 
             response = requests.post(
                 self.url,
