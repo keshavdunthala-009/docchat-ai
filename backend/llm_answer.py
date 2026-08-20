@@ -1,5 +1,6 @@
 import requests
 import os
+import re
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -44,17 +45,16 @@ ANSWER:"""
             }
 
             data = {
-    "model": self.model,
-    "messages": [
-        {
-            "role": "user",
-            "content": prompt
-        }
-    ],
-    "temperature": 0.1,
-    "max_tokens": 500,
-    "reasoning_effort": "none"  # ADD THIS
-}
+                "model": self.model,
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                "temperature": 0.1,
+                "max_tokens": 500
+            }
 
             response = requests.post(
                 self.url,
@@ -67,6 +67,10 @@ ANSWER:"""
                 return f"ERROR: {response.text}"
 
             answer = response.json()["choices"][0]["message"]["content"]
+
+            # Remove thinking tags if present
+            answer = re.sub(r'<think>.*?</think>', '', answer, flags=re.DOTALL).strip()
+
             return answer.strip()
 
         except Exception as e:
