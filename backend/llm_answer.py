@@ -10,11 +10,24 @@ class AnswerGenerator:
 
     def __init__(self):
         self.api_key = os.getenv("GROQ_API_KEY")
-        self.url = "https://api.groq.com/openai/v1/chat/completions"
-        self.model = "meta-llama/llama-4-scout-17b-16e-instruct"
+        self.base_url = "https://api.groq.com/openai/v1"
+        self.url = f"{self.base_url}/chat/completions"
+        # Override via GROQ_MODEL in your .env; falls back to a known-good default
+        self.model = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
         if not self.api_key:
             raise ValueError("GROQ_API_KEY not found!")
+
+    def list_models(self) -> list[str]:
+        """Return every model ID your API key can access."""
+        headers = {"Authorization": f"Bearer {self.api_key}"}
+        response = requests.get(
+            f"{self.base_url}/models",
+            headers=headers,
+            timeout=30,
+        )
+        response.raise_for_status()
+        return [m["id"] for m in response.json().get("data", [])]
 
     def generate(self, question: str, context: str) -> str:
 
@@ -64,6 +77,16 @@ ANSWER:"""
             )
 
             if response.status_code != 200:
+                # If the model is the problem, surface the valid options
+                if response.status_code == 404 or "model" in response.text.lower():
+                    try:
+                        available = ", ".join(self.list_models())
+                        return (
+                            f"ERROR: model '{self.model}' not available. "
+                            f"Set GROQ_MODEL to one of: {available}"
+                        )
+                    except Exception:
+                        pass
                 return f"ERROR: {response.text}"
 
             answer = response.json()["choices"][0]["message"]["content"]
@@ -75,3 +98,10 @@ ANSWER:"""
 
         except Exception as e:
             return f"ERROR: {str(e)}"
+
+
+if __name__ == "__main__":
+    gen = AnswerGenerator()
+    print("Models available to your key:")
+    for model_id in gen.list_models():
+        print(f"  - {model_id}")
